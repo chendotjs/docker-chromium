@@ -2,6 +2,9 @@
 set -e # Exit immediately if a command exits with a non-zero status.
 set -u # Treat unset variables as an error.
 
+USER_ID=1000
+GROUP_ID=1000
+
 log() {
     echo "[cont-init.d] $(basename $0): $*"
 }

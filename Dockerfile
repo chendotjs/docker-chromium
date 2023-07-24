@@ -5,7 +5,7 @@
 #
 
 # Pull base image.
-FROM jlesage/baseimage-gui:alpine-3.16-v4.0.0-pre.6
+FROM jlesage/baseimage-gui:alpine-3.15-v3
 
 # Docker image version is provided via build arg.
 ARG DOCKER_IMAGE_VERSION=unknown
@@ -62,11 +62,24 @@ RUN \
         # The following package is used to send key presses to the X process.
         xdotool
 
-# Enable log monitoring.
+RUN wget --no-check-certificate https://github.com/samuelngs/apple-emoji-linux/releases/download/v16.4/AppleColorEmoji.ttf -O /usr/share/fonts/AppleColorEmoji.ttf
+RUN wget https://github.com/anthonyfok/fonts-wqy-microhei/raw/master/wqy-microhei.ttc -O /usr/share/fonts/wqy-microhei.ttc
+RUN wget https://github.com/ITboy/font/raw/master/wqy-zenhei/debian/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc -O /usr/share/fonts/wqy-zenhei.ttc
+RUN fc-cache -f -v
+
+# Adjust the openbox config.
 RUN \
-    add-pkg yad && \
-    sed-patch 's|LOG_FILES=|LOG_FILES=/config/log/chromium/error.log|' /etc/logmonitor/logmonitor.conf && \
-    sed-patch 's|STATUS_FILES=|STATUS_FILES=/tmp/.chromium_shm_check|' /etc/logmonitor/logmonitor.conf
+    # Maximize only the main window.
+    sed-patch 's/<application type="normal">/<application type="normal" title="Chromium">/' \
+        /etc/xdg/openbox/rc.xml && \
+    # Make sure the main window is always in the background.
+    sed-patch '/<application type="normal" title="Chromium">/a \    <layer>below</layer>' \
+        /etc/xdg/openbox/rc.xml
+
+# Generate and install favicons.
+RUN \
+    APP_ICON_URL=https://upload.wikimedia.org/wikipedia/commons/f/f3/Chromium_Material_Icon.png && \
+    install_app_icon.sh "$APP_ICON_URL"
 
 # Add files.
 COPY rootfs/ /
